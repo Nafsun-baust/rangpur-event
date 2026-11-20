@@ -1,5 +1,4 @@
 import express from "express";
-import { MongoClient } from "mongodb";
 import cors from "cors";
 import "dotenv/config";
 import { MongoClient, ObjectId } from "mongodb";
@@ -45,6 +44,18 @@ app.get("/event/:id", async (req, res) => {
   const { id } = req.params;
   const result = await event.findOne({ _id: new ObjectId(id) });
   res.send(result);
+});
+app.patch("/event/:id", async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+  const result = await event.updateOne({ _id: new ObjectId(id) },{ $set: data });
+  res.json(result);
+});
+
+app.delete("/event/:id", async (req, res) => {
+  const { id } = req.params;
+  const result = await event.deleteOne({ _id: new ObjectId(id) });
+  res.json(result);
 });
 
 app.get("/", (req, res) => {
