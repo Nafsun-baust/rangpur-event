@@ -73,7 +73,7 @@ app.post("/join-event", async (req, res) => {
 app.get("/joined-events/:email", async (req, res) => {
   const { email } = req.params;
   const result = await joinedEvent
-    .find({ userEmail: email })
+    .find({ email: email })
     .sort({ eventDate: 1 })
     .toArray();
   res.send(result);
