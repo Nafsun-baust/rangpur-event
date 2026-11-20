@@ -2,6 +2,7 @@ import express from "express";
 import { MongoClient } from "mongodb";
 import cors from "cors";
 import "dotenv/config";
+import { MongoClient, ObjectId } from "mongodb";
 
 const app = express();
 const PORT = 8000;
@@ -38,6 +39,11 @@ app.get("/upcoming-events", async (req, res) => {
 
 app.get("/recent-event", async (req, res) => {
   const result = await event.find().limit(6).toArray();
+  res.send(result);
+});
+app.get("/event/:id", async (req, res) => {
+  const { id } = req.params;
+  const result = await event.findOne({ _id: new ObjectId(id) });
   res.send(result);
 });
 
