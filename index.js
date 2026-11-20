@@ -23,7 +23,23 @@ app.use(express.json());
 
 const mongoClient = await connectToMongoDB();
 const db = mongoClient.db("rangpur-event");
-const eventCollection = db.collection("events");
+const event = db.collection("events");
+
+app.post("/create-event", async (req, res) => {
+  const data = req.body;
+  const result = await event.insertOne(data);
+  res.send(result);
+});
+
+app.get("/upcoming-events", async (req, res) => {
+  const result = await event.find().toArray();
+  res.send(result);
+});
+
+app.get("/recent-event", async (req, res) => {
+  const result = await event.find().limit(6).toArray();
+  res.send(result);
+});
 
 app.get("/", (req, res) => {
   res.send({ message: "Server run" });
