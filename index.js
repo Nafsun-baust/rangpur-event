@@ -24,6 +24,7 @@ app.use(express.json());
 const mongoClient = await connectToMongoDB();
 const db = mongoClient.db("rangpur-event");
 const event = db.collection("events");
+const joinedEvent = db.collection("joinedEvents");
 
 app.post("/create-event", async (req, res) => {
   const data = req.body;
@@ -56,6 +57,26 @@ app.delete("/event/:id", async (req, res) => {
   const { id } = req.params;
   const result = await event.deleteOne({ _id: new ObjectId(id) });
   res.json(result);
+});
+app.get("/manage-events/:email", async (req, res) => {
+  const { email } = req.params;
+  const result = await event.find({ creatorEmail: email }).toArray();
+  res.send(result);
+});
+
+app.post("/join-event", async (req, res) => {
+  const data = req.body;
+  const result = await joinedEvent.insertOne(data);
+  res.send(result);
+});
+
+app.get("/joined-events/:email", async (req, res) => {
+  const { email } = req.params;
+  const result = await joinedEvent
+    .find({ userEmail: email })
+    .sort({ eventDate: 1 })
+    .toArray();
+  res.send(result);
 });
 
 app.get("/", (req, res) => {
