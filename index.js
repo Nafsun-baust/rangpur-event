@@ -49,19 +49,24 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-app.post("/create-event", async (req, res) => {
+app.post("/create-event", verifyToken, async (req, res) => {
   const data = req.body;
   const result = await event.insertOne(data);
   res.send(result);
 });
 
 app.get("/upcoming-events", async (req, res) => {
-  const result = await event.find().toArray();
+  const today = new Date().toISOString().split("T")[0];
+  const result = await event.find({ eventDate: { $gte: today } }).toArray();
   res.send(result);
 });
 
 app.get("/recent-event", async (req, res) => {
-  const result = await event.find().limit(6).toArray();
+  const today = new Date().toISOString().split("T")[0];
+  const result = await event
+    .find({ eventDate: { $gte: today } })
+    .limit(6)
+    .toArray();
   res.send(result);
 });
 
