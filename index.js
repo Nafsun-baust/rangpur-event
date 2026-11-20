@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import { MongoClient, ObjectId } from "mongodb";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 const app = express();
 const PORT = 8000;
@@ -26,6 +27,28 @@ const db = mongoClient.db("rangpur-event");
 const event = db.collection("events");
 const joinedEvent = db.collection("joinedEvents");
 
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ msg: "Unauthorized!" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).send({ msg: "Unauthorized!" });
+  }
+
+  const JWKS = createRemoteJWKSet(
+    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+  );
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    next();
+  } catch (error) {
+    return res.status(500).send({ msg: "Server Error!" });
+  }
+};
+
 app.post("/create-event", async (req, res) => {
   const data = req.body;
   const result = await event.insertOne(data);
@@ -41,15 +64,20 @@ app.get("/recent-event", async (req, res) => {
   const result = await event.find().limit(6).toArray();
   res.send(result);
 });
+
 app.get("/event/:id", async (req, res) => {
   const { id } = req.params;
   const result = await event.findOne({ _id: new ObjectId(id) });
   res.send(result);
 });
+
 app.patch("/event/:id", async (req, res) => {
   const { id } = req.params;
   const data = req.body;
-  const result = await event.updateOne({ _id: new ObjectId(id) },{ $set: data });
+  const result = await event.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: data }
+  );
   res.json(result);
 });
 
@@ -58,6 +86,7 @@ app.delete("/event/:id", async (req, res) => {
   const result = await event.deleteOne({ _id: new ObjectId(id) });
   res.json(result);
 });
+
 app.get("/manage-events/:email", async (req, res) => {
   const { email } = req.params;
   const result = await event.find({ creatorEmail: email }).toArray();
@@ -86,3 +115,5 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server port ${PORT}`);
 });
+
+export default app;
